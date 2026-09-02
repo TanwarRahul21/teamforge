@@ -130,12 +130,7 @@ router.post('/auth/refresh', async (req: Request, res: Response) => {
            $4,
            NOW() + INTERVAL '30 days'
          )`,
-        [
-          newSessionId,
-          current.user_id,
-          newHash,
-          current.family_id,
-        ],
+        [newSessionId, current.user_id, newHash, current.family_id],
       );
 
       const accessToken = createAccessToken({

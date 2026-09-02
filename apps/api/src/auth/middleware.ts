@@ -1,13 +1,6 @@
-import {
-  type NextFunction,
-  type Request,
-  type Response,
-} from 'express';
+import { type NextFunction, type Request, type Response } from 'express';
 
-import {
-  verifyAccessToken,
-  type AccessTokenClaims,
-} from './tokens.js';
+import { verifyAccessToken, type AccessTokenClaims } from './tokens.js';
 
 import { isSessionActive } from './session-check.js';
 

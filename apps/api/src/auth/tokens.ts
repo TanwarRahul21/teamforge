@@ -35,9 +35,7 @@ function getKeys(): {
   };
 }
 
-export function createAccessToken(
-  claims: AccessTokenClaims,
-): string {
+export function createAccessToken(claims: AccessTokenClaims): string {
   const { privateKey } = getKeys();
 
   return jwt.sign(claims, privateKey, {
@@ -47,9 +45,7 @@ export function createAccessToken(
   });
 }
 
-export function verifyAccessToken(
-  token: string,
-): AccessTokenClaims {
+export function verifyAccessToken(token: string): AccessTokenClaims {
   const { publicKey } = getKeys();
 
   return jwt.verify(token, publicKey, {
@@ -60,9 +56,7 @@ export function verifyAccessToken(
 export function newRefreshToken(): RefreshToken {
   const raw = randomBytes(32).toString('base64url');
 
-  const hash = createHash('sha256')
-    .update(raw)
-    .digest();
+  const hash = createHash('sha256').update(raw).digest();
 
   return {
     raw,

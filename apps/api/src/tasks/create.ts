@@ -13,15 +13,14 @@ router.post(
   async (req: AuthenticatedRequest, res) => {
     try {
       const { projectId } = req.params;
-      const { title, description, status, priority, assigneeId, dueAt } =
-        req.body as {
-          title?: unknown;
-          description?: unknown;
-          status?: unknown;
-          priority?: unknown;
-          assigneeId?: unknown;
-          dueAt?: unknown;
-        };
+      const { title, description, status, priority, assigneeId, dueAt } = req.body as {
+        title?: unknown;
+        description?: unknown;
+        status?: unknown;
+        priority?: unknown;
+        assigneeId?: unknown;
+        dueAt?: unknown;
+      };
 
       if (typeof title !== 'string' || title.trim().length === 0) {
         return res.status(400).json({
@@ -40,9 +39,7 @@ router.post(
       if (
         status !== undefined &&
         (typeof status !== 'string' ||
-          !VALID_STATUSES.includes(
-            status as (typeof VALID_STATUSES)[number],
-          ))
+          !VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number]))
       ) {
         return res.status(400).json({
           error: 'invalid_request',
@@ -53,9 +50,7 @@ router.post(
       if (
         priority !== undefined &&
         (typeof priority !== 'string' ||
-          !VALID_PRIORITIES.includes(
-            priority as (typeof VALID_PRIORITIES)[number],
-          ))
+          !VALID_PRIORITIES.includes(priority as (typeof VALID_PRIORITIES)[number]))
       ) {
         return res.status(400).json({
           error: 'invalid_request',
@@ -85,12 +80,12 @@ router.post(
       }
       const userId = req.user?.sub;
 
-if (!userId) {
-  return res.status(401).json({
-    error: 'unauthorized',
-    message: 'Authentication required',
-  });
-}
+      if (!userId) {
+        return res.status(401).json({
+          error: 'unauthorized',
+          message: 'Authentication required',
+        });
+      }
 
       const projectResult = await pool.query<{
         id: string;

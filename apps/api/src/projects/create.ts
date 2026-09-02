@@ -1,9 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { pool, withTransaction } from '@teamforge/db';
-import {
-  authMiddleware,
-  type AuthenticatedRequest,
-} from '../auth/middleware.js';
+import { authMiddleware, type AuthenticatedRequest } from '../auth/middleware.js';
 
 const router = Router();
 

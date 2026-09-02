@@ -35,9 +35,7 @@ export interface RateLimitOptions {
   prefix?: string;
 }
 
-export function createRateLimiter(
-  options: RateLimitOptions,
-) {
+export function createRateLimiter(options: RateLimitOptions) {
   const prefix = options.prefix ?? 'rate-limit';
 
   return async (
@@ -56,10 +54,7 @@ export function createRateLimiter(
       await redisClient.expire(key, options.windowSeconds);
     }
 
-    const remaining = Math.max(
-      0,
-      options.limit - current,
-    );
+    const remaining = Math.max(0, options.limit - current);
 
     return {
       allowed: current <= options.limit,

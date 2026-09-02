@@ -4,7 +4,6 @@ import { createClient } from 'redis';
 import { pool } from '@teamforge/db';
 dotenv.config();
 
-
 const port = process.env.WORKER_PORT || 4001;
 
 // Initialize Redis Client

@@ -81,10 +81,7 @@ router.post('/auth/login', async (req: Request, res: Response) => {
       });
     }
 
-    const passwordValid = await argon2.verify(
-      user.password_hash,
-      password,
-    );
+    const passwordValid = await argon2.verify(user.password_hash, password);
 
     if (!passwordValid) {
       await pool.query(
@@ -117,14 +114,13 @@ router.post('/auth/login', async (req: Request, res: Response) => {
       [user.id],
     );
 
-    const { accessToken, refreshToken } = await withTransaction(
-      async (tx) => {
-        const sessionId = randomUUID();
-        const familyId = randomUUID();
-        const { raw, hash } = newRefreshToken();
+    const { accessToken, refreshToken } = await withTransaction(async (tx) => {
+      const sessionId = randomUUID();
+      const familyId = randomUUID();
+      const { raw, hash } = newRefreshToken();
 
-        await tx.query(
-          `INSERT INTO sessions (
+      await tx.query(
+        `INSERT INTO sessions (
              id,
              user_id,
              refresh_hash,
@@ -138,20 +134,19 @@ router.post('/auth/login', async (req: Request, res: Response) => {
              $4,
              NOW() + INTERVAL '30 days'
            )`,
-          [sessionId, user.id, hash, familyId],
-        );
+        [sessionId, user.id, hash, familyId],
+      );
 
-        const accessToken = createAccessToken({
-          sub: user.id,
-          sid: sessionId,
-        });
+      const accessToken = createAccessToken({
+        sub: user.id,
+        sid: sessionId,
+      });
 
-        return {
-          accessToken,
-          refreshToken: raw,
-        };
-      },
-    );
+      return {
+        accessToken,
+        refreshToken: raw,
+      };
+    });
 
     return res.status(200).json({
       message: 'Login successful',
