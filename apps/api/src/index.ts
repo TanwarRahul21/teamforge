@@ -13,6 +13,7 @@ import organizationCreateRouter from './organizations/create.js';
 import teamCreateRouter from './teams/create.js';
 import teamAddMemberRouter from './teams/add-member.js';
 import projectCreateRouter from './projects/create.js';
+import taskCreateRouter from './tasks/create.js';
 const app = express();
 const port = process.env.PORT || 4000;
 
@@ -28,6 +29,7 @@ app.use(organizationCreateRouter);
 app.use(teamCreateRouter);
 app.use(teamAddMemberRouter);
 app.use(projectCreateRouter);
+app.use(taskCreateRouter);
 // Initialize Redis Client
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 const redisClient = createClient({ url: redisUrl });
