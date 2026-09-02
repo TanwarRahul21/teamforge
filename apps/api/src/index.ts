@@ -36,14 +36,12 @@ redisClient.on('error', (err) => {
   console.error('[Redis] Client connection error:', err);
 });
 
-// Health check endpoint verifying infrastructure connectivity
 app.get('/health', async (req, res) => {
   let dbStatus = 'unhealthy';
   let redisStatus = 'unhealthy';
   let isHealthy = true;
 
   try {
-    // Run simple raw query to check connection
     await pool.query('SELECT 1');
     dbStatus = 'healthy';
   } catch (err) {
