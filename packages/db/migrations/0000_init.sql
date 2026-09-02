@@ -1,0 +1,2 @@
+-- Baseline migration: Initializes schema tracking.
+-- No business tables are created in M0 infrastructure layer.

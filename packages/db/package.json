@@ -1,0 +1,26 @@
+{
+  "name": "@teamforge/db",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/**/*.ts",
+    "test": "echo \"No tests for @teamforge/db\"",
+    "clean": "rimraf dist",
+    "migrate": "tsx src/migrate.ts"
+  },
+  "dependencies": {
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "@teamforge/config": "workspace:*",
+    "@types/pg": "^8.11.2",
+    "rimraf": "^5.0.1",
+    "tsx": "^4.7.1",
+    "typescript": "^5.2.2"
+  }
+}

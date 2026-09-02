@@ -1,0 +1,26 @@
+{
+  "name": "worker",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/**/*.ts",
+    "test": "echo \"No tests for worker\"",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@teamforge/db": "workspace:*",
+    "dotenv": "^16.4.5",
+    "redis": "^4.6.13"
+  },
+  "devDependencies": {
+    "@teamforge/config": "workspace:*",
+    "rimraf": "^5.0.1",
+    "tsx": "^4.7.1",
+    "typescript": "^5.2.2"
+  }
+}

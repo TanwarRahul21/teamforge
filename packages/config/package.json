@@ -1,0 +1,19 @@
+{
+  "name": "@teamforge/config",
+  "version": "1.0.0",
+  "private": true,
+  "main": "eslint-preset.js",
+  "scripts": {
+    "typecheck": "echo \"No typecheck required for config\"",
+    "test": "echo \"No tests for @teamforge/config\"",
+    "build": "echo \"No build for @teamforge/config\"",
+    "lint": "eslint eslint-preset.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  },
+  "files": [
+    "eslint-preset.js",
+    "tsconfig.json"
+  ]
+}

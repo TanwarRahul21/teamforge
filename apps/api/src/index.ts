@@ -1,0 +1,98 @@
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import { createClient } from 'redis';
+import { pool, runMigrations } from '@teamforge/db';
+import authRouter from './auth/signup';
+import loginRouter from './auth/login';
+import meRouter from './auth/me';
+import refreshRouter from './auth/refresh';
+import logoutRouter from './auth/logout.js';
+import revokeAllRouter from './auth/revoke-all.js';
+import organizationCreateRouter from './organizations/create.js';
+import teamCreateRouter from './teams/create.js';
+import teamAddMemberRouter from './teams/add-member.js';
+import projectCreateRouter from './projects/create.js';
+const app = express();
+const port = process.env.PORT || 4000;
+
+app.use(cors());
+app.use(express.json());
+app.use(authRouter);
+app.use(loginRouter);
+app.use(meRouter);
+app.use(refreshRouter);
+app.use(logoutRouter);
+app.use(revokeAllRouter);
+app.use(organizationCreateRouter);
+app.use(teamCreateRouter);
+app.use(teamAddMemberRouter);
+app.use(projectCreateRouter);
+// Initialize Redis Client
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+const redisClient = createClient({ url: redisUrl });
+
+redisClient.on('error', (err) => {
+  console.error('[Redis] Client connection error:', err);
+});
+
+// Health check endpoint verifying infrastructure connectivity
+app.get('/health', async (req, res) => {
+  let dbStatus = 'unhealthy';
+  let redisStatus = 'unhealthy';
+  let isHealthy = true;
+
+  try {
+    // Run simple raw query to check connection
+    await pool.query('SELECT 1');
+    dbStatus = 'healthy';
+  } catch (err) {
+    console.error('[Healthcheck] DB Connection Failure:', err);
+    isHealthy = false;
+  }
+
+  try {
+    if (!redisClient.isOpen) {
+      await redisClient.connect();
+    }
+    const pingResponse = await redisClient.ping();
+    if (pingResponse === 'PONG') {
+      redisStatus = 'healthy';
+    } else {
+      isHealthy = false;
+    }
+  } catch (err) {
+    console.error('[Healthcheck] Redis Connection Failure:', err);
+    isHealthy = false;
+  }
+
+  const statusCode = isHealthy ? 200 : 503;
+  res.status(statusCode).json({
+    status: isHealthy ? 'healthy' : 'unhealthy',
+    timestamp: new Date().toISOString(),
+    services: {
+      database: dbStatus,
+      redis: redisStatus,
+    },
+  });
+});
+
+async function startServer() {
+  try {
+    // Run SQL database migrations
+    await runMigrations();
+
+    // Connect to Redis on startup
+    await redisClient.connect();
+    console.log('[Redis] Connected successfully.');
+
+    app.listen(port, () => {
+      console.log(`[API] Server listening on port ${port}`);
+    });
+  } catch (error) {
+    console.error('[API] Failed to start application:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
