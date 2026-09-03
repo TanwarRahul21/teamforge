@@ -18,6 +18,8 @@ import taskListRouter from './tasks/list.js';
 import taskUpdateRouter from './tasks/update.js';
 import taskDeleteRouter from './tasks/delete.js';
 import taskRestoreRouter from './tasks/restore.js';
+import commentsCreateRouter from './tasks/comments-create.js';
+import commentsListRouter from './tasks/comments-list.js';
 const app = express();
 const port = process.env.PORT || 4000;
 
@@ -38,6 +40,8 @@ app.use(taskCreateRouter);
 app.use(taskUpdateRouter);
 app.use(taskDeleteRouter);
 app.use(taskRestoreRouter);
+app.use(commentsCreateRouter);  
+app.use(commentsListRouter);
 // Initialize Redis Client
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 const redisClient = createClient({ url: redisUrl });
