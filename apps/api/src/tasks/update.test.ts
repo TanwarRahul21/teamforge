@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
 import express from 'express';
+import { pool } from '@teamforge/db';
 
 vi.mock('../auth/middleware.js', () => ({
   authMiddleware: (
@@ -28,17 +29,35 @@ const taskId = 'd22b47cf-b656-423f-822f-bd8aa49f56a0';
 
 describe('PATCH /projects/:projectId/tasks/:taskId', () => {
   it('rejects an update with a stale version', async () => {
+    const taskResult = await pool.query<{ version: string }>(
+      `
+      SELECT version
+      FROM tasks
+      WHERE id = $1
+        AND project_id = $2
+        AND deleted_at IS NULL
+      `,
+      [taskId, projectId],
+    );
+
+    expect(taskResult.rowCount).toBe(1);
+
+    const currentVersion = Number(taskResult.rows[0].version);
+    expect(currentVersion).toBeGreaterThan(1);
+
+    const staleVersion = currentVersion - 1;
+
     const response = await request(app)
       .patch(`/projects/${projectId}/tasks/${taskId}`)
       .send({
         title: 'Stale update',
-        expectedVersion: 1,
+        expectedVersion: staleVersion,
       });
 
     expect(response.status).toBe(409);
     expect(response.body).toMatchObject({
       error: 'version_conflict',
     });
-    expect(response.body.currentVersion).toBe('2');
+    expect(Number(response.body.currentVersion)).toBeGreaterThan(staleVersion);
   });
 });

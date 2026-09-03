@@ -16,6 +16,8 @@ import projectCreateRouter from './projects/create.js';
 import taskCreateRouter from './tasks/create.js';
 import taskListRouter from './tasks/list.js';
 import taskUpdateRouter from './tasks/update.js';
+import taskDeleteRouter from './tasks/delete.js';
+import taskRestoreRouter from './tasks/restore.js';
 const app = express();
 const port = process.env.PORT || 4000;
 
@@ -31,8 +33,11 @@ app.use(organizationCreateRouter);
 app.use(teamCreateRouter);
 app.use(teamAddMemberRouter);
 app.use(projectCreateRouter);
+app.use(taskListRouter);
 app.use(taskCreateRouter);
 app.use(taskUpdateRouter);
+app.use(taskDeleteRouter);
+app.use(taskRestoreRouter);
 // Initialize Redis Client
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 const redisClient = createClient({ url: redisUrl });
