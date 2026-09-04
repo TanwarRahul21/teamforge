@@ -22,6 +22,10 @@ import commentsCreateRouter from './tasks/comments-create.js';
 import commentsListRouter from './tasks/comments-list.js';
 import commentsUpdateRouter from './tasks/comments-update.js';
 import commentsDeleteRouter from './tasks/comments-delete.js';
+import labelsCreateRouter from './labels-create.js';
+import labelsListRouter from './labels-list.js';
+import labelsAddRouter from './tasks/labels-add.js';
+import labelsRemoveRouter from './tasks/labels-remove.js';
 const app = express();
 const port = process.env.PORT || 4000;
 
@@ -46,6 +50,10 @@ app.use(commentsCreateRouter);
 app.use(commentsListRouter);
 app.use(commentsUpdateRouter);
 app.use(commentsDeleteRouter);
+app.use(labelsCreateRouter);
+app.use(labelsListRouter);
+app.use(labelsAddRouter);
+app.use(labelsRemoveRouter);
 // Initialize Redis Client
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 const redisClient = createClient({ url: redisUrl });
