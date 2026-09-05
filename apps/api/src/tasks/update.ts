@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { pool } from '@teamforge/db';
+import { pool, withTransaction } from '@teamforge/db';
+import { writeAuditLog } from '../audit/log.js';
 import {
   authMiddleware,
   type AuthenticatedRequest,
@@ -113,7 +114,7 @@ router.patch(
 
       const projectAccess = await pool.query(
         `
-        SELECT p.id, p.team_id
+        SELECT p.id, p.team_id, t.org_id
         FROM projects p
         JOIN teams t ON t.id = p.team_id
         JOIN memberships m
@@ -131,7 +132,11 @@ router.patch(
         });
       }
 
-      const project = projectAccess.rows[0] as { id: string; team_id: string };
+      const project = projectAccess.rows[0] as {
+        id: string;
+        team_id: string;
+        org_id: string;
+      };
 
       if (assigneeId) {
         const assigneeResult = await pool.query(
@@ -152,89 +157,118 @@ router.patch(
         }
       }
 
-      const updateResult = await pool.query(
-        `
-        UPDATE tasks
-        SET
-          title = COALESCE($3, title),
-          description = CASE
-            WHEN $4::boolean THEN $5
-            ELSE description
-          END,
-          status = COALESCE($6::task_status, status),
-          priority = COALESCE($7::task_priority, priority),
-          assignee_id = CASE
-            WHEN $8::boolean THEN $9
-            ELSE assignee_id
-          END,
-          due_at = CASE
-            WHEN $10::boolean THEN $11::timestamptz
-            ELSE due_at
-          END,
-          version = version + 1,
-          updated_at = NOW()
-        WHERE id = $1
-          AND project_id = $2
-          AND deleted_at IS NULL
-          AND version = $12
-        RETURNING
-          id,
-          project_id,
-          title,
-          description,
-          status,
-          priority,
-          assignee_id,
-          due_at,
-          version,
-          created_at,
-          updated_at
-        `,
-        [
-          taskId,
-          projectId,
-          title !== undefined ? title.trim() : null,
-          description !== undefined,
-          description ?? null,
-          status ?? null,
-          priority ?? null,
-          assigneeId !== undefined,
-          assigneeId ?? null,
-          dueAt !== undefined,
-          dueAt ?? null,
-          expectedVersion,
-        ],
-      );
-
-      if (updateResult.rowCount === 0) {
-        const taskResult = await pool.query(
+      const result = await withTransaction(async (tx) => {
+        const updateResult = await tx.query(
           `
-          SELECT id, version
-          FROM tasks
+          UPDATE tasks
+          SET
+            title = COALESCE($3, title),
+            description = CASE
+              WHEN $4::boolean THEN $5
+              ELSE description
+            END,
+            status = COALESCE($6::task_status, status),
+            priority = COALESCE($7::task_priority, priority),
+            assignee_id = CASE
+              WHEN $8::boolean THEN $9
+              ELSE assignee_id
+            END,
+            due_at = CASE
+              WHEN $10::boolean THEN $11::timestamptz
+              ELSE due_at
+            END,
+            version = version + 1,
+            updated_at = NOW()
           WHERE id = $1
             AND project_id = $2
             AND deleted_at IS NULL
+            AND version = $12
+          RETURNING
+            id,
+            project_id,
+            title,
+            description,
+            status,
+            priority,
+            assignee_id,
+            due_at,
+            version,
+            created_at,
+            updated_at
           `,
-          [taskId, projectId],
+          [
+            taskId,
+            projectId,
+            title !== undefined ? title.trim() : null,
+            description !== undefined,
+            description ?? null,
+            status ?? null,
+            priority ?? null,
+            assigneeId !== undefined,
+            assigneeId ?? null,
+            dueAt !== undefined,
+            dueAt ?? null,
+            expectedVersion,
+          ],
         );
 
-        if (taskResult.rowCount === 0) {
-          return res.status(404).json({
-            error: 'task_not_found',
-            message: 'Task not found',
-          });
+        if (updateResult.rowCount === 0) {
+          const taskResult = await tx.query(
+            `
+            SELECT id, version
+            FROM tasks
+            WHERE id = $1
+              AND project_id = $2
+              AND deleted_at IS NULL
+            `,
+            [taskId, projectId],
+          );
+
+          if (taskResult.rowCount === 0) {
+            return {
+              status: 404,
+              body: {
+                error: 'task_not_found',
+                message: 'Task not found',
+              },
+            };
+          }
+
+          return {
+            status: 409,
+            body: {
+              error: 'version_conflict',
+              message: 'Task was modified by another request',
+              currentVersion: taskResult.rows[0].version,
+            },
+          };
         }
 
-        return res.status(409).json({
-          error: 'version_conflict',
-          message: 'Task was modified by another request',
-          currentVersion: taskResult.rows[0].version,
-        });
-      }
+        const updatedTask = updateResult.rows[0];
 
-      return res.status(200).json({
-        task: updateResult.rows[0],
+        await writeAuditLog(
+          {
+            orgId: project.org_id,
+            actorId: userId,
+            action: 'task.updated',
+            resource: taskId,
+            metadata: {
+              projectId,
+              version: Number(updatedTask.version),
+            },
+          },
+          tx,
+        );
+
+        return {
+          status: 200,
+          body: {
+            task: updatedTask,
+          },
+        };
       });
+
+      return res.status(result.status).json(result.body);
     } catch (error) {
       console.error('[Tasks] Update error:', error);
 
