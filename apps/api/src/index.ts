@@ -1,8 +1,10 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import { createServer } from 'node:http';
 import { createClient } from 'redis';
 import { pool, runMigrations } from '@teamforge/db';
+import { createWebSocketGateway } from './realtime/ws.js';
 import authRouter from './auth/signup';
 import loginRouter from './auth/login';
 import meRouter from './auth/me';
@@ -110,7 +112,10 @@ async function startServer() {
     await redisClient.connect();
     console.log('[Redis] Connected successfully.');
 
-    app.listen(port, () => {
+    const server = createServer(app);
+    await createWebSocketGateway(server, redisUrl);
+
+    server.listen(port, () => {
       console.log(`[API] Server listening on port ${port}`);
     });
   } catch (error) {
