@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { pool, withTransaction } from '@teamforge/db';
 import { writeAuditLog } from '../audit/log.js';
+import { writeOutboxEvent } from '../outbox/write.js';
 import {
   authMiddleware,
   type AuthenticatedRequest,
@@ -254,6 +255,20 @@ router.patch(
             resource: taskId,
             metadata: {
               projectId,
+              version: Number(updatedTask.version),
+            },
+          },
+          tx,
+        );
+
+        await writeOutboxEvent(
+          {
+            type: 'task.updated',
+            payload: {
+              taskId,
+              projectId,
+              orgId: project.org_id,
+              actorId: userId,
               version: Number(updatedTask.version),
             },
           },

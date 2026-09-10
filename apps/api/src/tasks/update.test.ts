@@ -86,6 +86,25 @@ describe('PATCH /projects/:projectId/tasks/:taskId', () => {
       },
     });
     expect(auditResult.rows[0].org_id).not.toBeNull();
+
+    const outboxResult = await pool.query<{ payload: any }>(
+      `
+      SELECT payload
+      FROM outbox
+      WHERE type = 'task.updated'
+      ORDER BY created_at DESC
+      LIMIT 1
+      `,
+    );
+
+    expect(outboxResult.rowCount).toBeGreaterThan(0);
+    expect(outboxResult.rows[0].payload).toMatchObject({
+      taskId,
+      projectId,
+      actorId: '87f15ca7-5e66-4c5f-a261-23194b9cedd2',
+      version: currentVersion + 1,
+    });
+    expect(outboxResult.rows[0].payload.orgId).toBeDefined();
   });
 
   it('rejects an update with a stale version', async () => {
