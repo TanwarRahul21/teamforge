@@ -1,5 +1,7 @@
 import { Router } from 'express';
-import { pool } from '@teamforge/db';
+import { pool, withTransaction } from '@teamforge/db';
+import { writeAuditLog } from '../audit/log.js';
+import { writeOutboxEvent } from '../outbox/write.js';
 import {
   authMiddleware,
   type AuthenticatedRequest,
@@ -39,9 +41,11 @@ router.post(
         });
       }
 
-      const accessResult = await pool.query(
+      const accessResult = await pool.query<{
+        org_id: string;
+      }>(
         `
-        SELECT t.id
+        SELECT tm.org_id
         FROM tasks t
         JOIN projects p ON p.id = t.project_id
         JOIN teams tm ON tm.id = p.team_id
@@ -62,32 +66,69 @@ router.post(
         });
       }
 
-      const commentResult = await pool.query<{
-        id: string;
-        task_id: string;
-        author_id: string;
-        body: string;
-        created_at: string;
-      }>(
-        `
-        INSERT INTO task_comments (
-          task_id,
-          author_id,
-          body
-        )
-        VALUES ($1, $2, $3)
-        RETURNING
-          id,
-          task_id,
-          author_id,
-          body,
-          created_at
-        `,
-        [taskId, userId, body.trim()],
-      );
+      const orgId = accessResult.rows[0].org_id;
+
+      const commentResult = await withTransaction(async (tx) => {
+        const createdCommentResult = await tx.query<{
+          id: string;
+          task_id: string;
+          author_id: string;
+          body: string;
+          created_at: string;
+        }>(
+          `
+          INSERT INTO task_comments (
+            task_id,
+            author_id,
+            body
+          )
+          VALUES ($1, $2, $3)
+          RETURNING
+            id,
+            task_id,
+            author_id,
+            body,
+            created_at
+          `,
+          [taskId, userId, body.trim()],
+        );
+
+        const comment = createdCommentResult.rows[0];
+
+        await writeAuditLog(
+          {
+            orgId,
+            actorId: userId,
+            action: 'task.comment.created',
+            resource: comment.id,
+            metadata: {
+              commentId: comment.id,
+              taskId,
+              projectId,
+            },
+          },
+          tx,
+        );
+
+        await writeOutboxEvent(
+          {
+            type: 'task.comment.created',
+            payload: {
+              commentId: comment.id,
+              taskId,
+              projectId,
+              orgId,
+              actorId: userId,
+            },
+          },
+          tx,
+        );
+
+        return comment;
+      });
 
       return res.status(201).json({
-        comment: commentResult.rows[0],
+        comment: commentResult,
       });
     } catch (error) {
       console.error('[Comments] Create error:', error);
