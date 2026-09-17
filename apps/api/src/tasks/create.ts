@@ -1,5 +1,7 @@
 import { Router } from 'express';
-import { pool } from '@teamforge/db';
+import { pool, withTransaction } from '@teamforge/db';
+import { writeAuditLog } from '../audit/log.js';
+import { writeOutboxEvent } from '../outbox/write.js';
 import { authMiddleware, AuthenticatedRequest } from '../auth/middleware.js';
 
 const router = Router();
@@ -90,9 +92,10 @@ router.post(
       const projectResult = await pool.query<{
         id: string;
         team_id: string;
+        org_id: string;
       }>(
         `
-        SELECT p.id, p.team_id
+        SELECT p.id, p.team_id, t.org_id
         FROM projects p
         JOIN teams t ON t.id = p.team_id
         JOIN memberships m
@@ -131,54 +134,88 @@ router.post(
         }
       }
 
-      const taskResult = await pool.query<{
-        id: string;
-        project_id: string;
-        title: string;
-        description: string | null;
-        status: string;
-        priority: string;
-        assignee_id: string | null;
-        due_at: string | null;
-        version: string;
-        created_at: string;
-        updated_at: string;
-      }>(
-        `
-        INSERT INTO tasks (
-          project_id,
-          title,
-          description,
-          status,
-          priority,
-          assignee_id,
-          due_at
-        )
-        VALUES ($1, $2, $3, COALESCE($4::task_status, 'backlog'),
-                COALESCE($5::task_priority, 'medium'), $6, $7)
-        RETURNING
-          id,
-          project_id,
-          title,
-          description,
-          status,
-          priority,
-          assignee_id,
-          due_at,
-          version,
-          created_at,
-          updated_at
-        `,
-        [
-          projectId,
-          title.trim(),
-          description ?? null,
-          status ?? null,
-          priority ?? null,
-          assigneeId ?? null,
-          dueAt ?? null,
-        ],
-      );
+      const taskResult = await withTransaction(async (tx) => {
+        const insertedTaskResult = await tx.query<{
+          id: string;
+          project_id: string;
+          title: string;
+          description: string | null;
+          status: string;
+          priority: string;
+          assignee_id: string | null;
+          due_at: string | null;
+          version: string;
+          created_at: string;
+          updated_at: string;
+        }>(
+          `
+          INSERT INTO tasks (
+            project_id,
+            title,
+            description,
+            status,
+            priority,
+            assignee_id,
+            due_at
+          )
+          VALUES ($1, $2, $3, COALESCE($4::task_status, 'backlog'),
+                  COALESCE($5::task_priority, 'medium'), $6, $7)
+          RETURNING
+            id,
+            project_id,
+            title,
+            description,
+            status,
+            priority,
+            assignee_id,
+            due_at,
+            version,
+            created_at,
+            updated_at
+          `,
+          [
+            projectId,
+            title.trim(),
+            description ?? null,
+            status ?? null,
+            priority ?? null,
+            assigneeId ?? null,
+            dueAt ?? null,
+          ],
+        );
+
+        const task = insertedTaskResult.rows[0];
+
+        await writeAuditLog(
+          {
+            orgId: project.org_id,
+            actorId: userId,
+            action: 'task.created',
+            resource: task.id,
+            metadata: {
+              projectId,
+              version: Number(task.version),
+            },
+          },
+          tx,
+        );
+
+        await writeOutboxEvent(
+          {
+            type: 'task.created',
+            payload: {
+              taskId: task.id,
+              projectId,
+              orgId: project.org_id,
+              actorId: userId,
+              version: Number(task.version),
+            },
+          },
+          tx,
+        );
+
+        return insertedTaskResult;
+      });
 
       return res.status(201).json({
         task: taskResult.rows[0],

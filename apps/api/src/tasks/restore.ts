@@ -1,5 +1,7 @@
 import { Router } from 'express';
-import { pool } from '@teamforge/db';
+import { pool, withTransaction } from '@teamforge/db';
+import { writeAuditLog } from '../audit/log.js';
+import { writeOutboxEvent } from '../outbox/write.js';
 import {
   authMiddleware,
   type AuthenticatedRequest,
@@ -36,9 +38,12 @@ router.post(
         });
       }
 
-      const projectAccess = await pool.query(
+      const projectAccess = await pool.query<{
+        id: string;
+        org_id: string;
+      }>(
         `
-        SELECT p.id
+        SELECT p.id, t.org_id
         FROM projects p
         JOIN teams t ON t.id = p.team_id
         JOIN memberships m
@@ -56,32 +61,70 @@ router.post(
         });
       }
 
-      const restoreResult = await pool.query<{
-        id: string;
-        project_id: string;
-        version: string;
-        deleted_at: string | null;
-      }>(
-        `
-        UPDATE tasks
-        SET
-          deleted_at = NULL,
-          version = version + 1,
-          updated_at = NOW()
-        WHERE id = $1
-          AND project_id = $2
-          AND deleted_at IS NOT NULL
-          AND version = $3
-        RETURNING
-          id,
-          project_id,
-          version,
-          deleted_at
-        `,
-        [taskId, projectId, expectedVersion],
-      );
+      const restoreResult = await withTransaction(async (tx) => {
+        const updatedTaskResult = await tx.query<{
+          id: string;
+          project_id: string;
+          version: string;
+          deleted_at: string | null;
+        }>(
+          `
+          UPDATE tasks
+          SET
+            deleted_at = NULL,
+            version = version + 1,
+            updated_at = NOW()
+          WHERE id = $1
+            AND project_id = $2
+            AND deleted_at IS NOT NULL
+            AND version = $3
+          RETURNING
+            id,
+            project_id,
+            version,
+            deleted_at
+          `,
+          [taskId, projectId, expectedVersion],
+        );
 
-      if (restoreResult.rowCount === 0) {
+        if (updatedTaskResult.rowCount === 0) {
+          return null;
+        }
+
+        const task = updatedTaskResult.rows[0];
+
+        await writeAuditLog(
+          {
+            orgId: projectAccess.rows[0].org_id,
+            actorId: userId,
+            action: 'task.restored',
+            resource: taskId,
+            metadata: {
+              projectId,
+              version: Number(task.version),
+            },
+          },
+          tx,
+        );
+
+        await writeOutboxEvent(
+          {
+            type: 'task.restored',
+            payload: {
+              taskId,
+              projectId,
+              orgId: projectAccess.rows[0].org_id,
+              actorId: userId,
+              version: Number(task.version),
+            },
+          },
+          tx,
+        );
+
+        return task;
+      });
+
+      if (restoreResult === null) {
         const taskResult = await pool.query<{
           id: string;
           version: string;
@@ -121,7 +164,7 @@ router.post(
       }
 
       return res.status(200).json({
-        task: restoreResult.rows[0],
+        task: restoreResult,
       });
     } catch (error) {
       console.error('[Tasks] Restore error:', error);
