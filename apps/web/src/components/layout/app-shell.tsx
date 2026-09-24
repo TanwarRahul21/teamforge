@@ -2,18 +2,46 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
+import { useAuth } from "@/components/auth/auth-provider";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { Avatar } from "@/components/ui/avatar";
 import { IconBell, IconChevronLeft, IconMenu, IconSearch } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import type { DashboardData } from "@/types/dashboard";
 
 export function AppShell({ data, children }: { data: DashboardData; children: ReactNode }) {
+  const { logout, user } = useAuth();
+  const router = useRouter();
   const pathname = usePathname();
   const drawerRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const accountName = user?.display_name ?? "Account";
+  const accountEmail = user?.email ?? "";
+
+  const initials = (() => {
+    if (!user) {
+      return "TF";
+    }
+
+    const source = accountName.trim() || accountEmail.trim() || "TF";
+    const parts = source.split(/\s+/).filter(Boolean);
+
+    if (parts.length === 0) {
+      return "TF";
+    }
+
+    if (parts.length === 1) {
+      return parts[0]!.slice(0, 2).toUpperCase();
+    }
+
+    return parts
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? "")
+      .join("");
+  })();
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -50,6 +78,11 @@ export function AppShell({ data, children }: { data: DashboardData; children: Re
   }, [pathname, mobileOpen]);
 
   const closeMobileMenu = () => setMobileOpen(false);
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace("/login");
+  };
 
   return (
     <div className="min-h-dvh bg-surface text-foreground">
@@ -120,14 +153,26 @@ export function AppShell({ data, children }: { data: DashboardData; children: Re
                     <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-accent" aria-hidden="true" />
                   </button>
 
+                  <div
+                    className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface-alt px-2 py-1.5"
+                    aria-label={user ? `${accountName} account details` : "Account details"}
+                    title={accountEmail}
+                  >
+                    <Avatar initials={initials} size="sm" className="border-none" />
+                    <div className="hidden min-w-0 flex-col items-start lg:flex">
+                      <span className="max-w-[180px] truncate text-sm font-medium text-foreground">{accountName}</span>
+                      {accountEmail ? (
+                        <span className="max-w-[180px] truncate text-xs text-muted">{accountEmail}</span>
+                      ) : null}
+                    </div>
+                  </div>
+
                   <button
                     type="button"
-                    className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface-alt px-2 py-1.5"
-                    aria-label="Open account menu"
+                    onClick={handleLogout}
+                    className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-surface-alt px-3 text-sm font-medium text-muted transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
                   >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-[10px] font-semibold text-accent">
-                      {data.user.initials}
-                    </div>
+                    Sign out
                   </button>
                 </div>
 

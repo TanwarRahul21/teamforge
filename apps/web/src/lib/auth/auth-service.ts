@@ -1,64 +1,142 @@
-import { apiRequest } from "@/lib/api/client";
-import { AUTH_ENDPOINTS } from "@/lib/api/config";
+import {
+  login as loginRequest,
+  logout as logoutRequest,
+  me as meRequest,
+  refresh as refreshRequest,
+} from "@/lib/api/auth";
 import { ApiError } from "@/lib/api/errors";
-import type { CurrentUser, LoginRequest, RefreshResponse } from "@/types/auth";
+import type { LoginRequest, LoginUser } from "@/types/auth";
+
+export type AuthSession = {
+  accessToken: string;
+  refreshToken: string;
+  user: LoginUser;
+};
 
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
-let inFlightRefresh: Promise<RefreshResponse> | null = null;
+let currentUser: LoginUser | null = null;
+let inFlightRefresh: Promise<AuthSession | null> | null = null;
 
-export function setAccessToken(token: string | null) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  accessToken = token;
-}
-
-export function setRefreshToken(token: string | null) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  refreshToken = token;
-}
-
-export async function login(credentials: LoginRequest): Promise<CurrentUser | null> {
-  const loginPayload = await apiRequest<{
-    accessToken: string;
-    refreshToken: string;
-    user: { id: string; email: string; display_name: string };
-  }>(AUTH_ENDPOINTS.login, {
-    method: "POST",
-    body: credentials,
-  });
-
-  if (typeof window !== "undefined") {
-    accessToken = loginPayload.accessToken;
-    refreshToken = loginPayload.refreshToken;
+function readSession(): AuthSession | null {
+  if (!accessToken || !refreshToken || !currentUser) {
+    return null;
   }
 
   return {
-    id: loginPayload.user.id,
-    sessionId: "",
+    accessToken,
+    refreshToken,
+    user: currentUser,
   };
 }
 
-export async function getCurrentUser(): Promise<CurrentUser | null> {
-  try {
-    if (typeof window !== "undefined" && accessToken) {
-      const response = await apiRequest<{ user: CurrentUser }>(AUTH_ENDPOINTS.me, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+function setSession(session: { accessToken: string; refreshToken: string; user?: LoginUser | null }) {
+  accessToken = session.accessToken;
+  refreshToken = session.refreshToken;
 
-      return response.user;
+  if (session.user) {
+    currentUser = session.user;
+  }
+}
+
+function clearSession() {
+  accessToken = null;
+  refreshToken = null;
+  currentUser = null;
+}
+
+async function verifyCurrentSession(): Promise<boolean> {
+  if (!accessToken) {
+    return false;
+  }
+
+  try {
+    await meRequest({
+      Authorization: `Bearer ${accessToken}`,
+    });
+    return true;
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      return false;
     }
 
+    throw error;
+  }
+}
+
+export function getSessionSnapshot(): AuthSession | null {
+  return readSession();
+}
+
+export function hasSession(): boolean {
+  return readSession() !== null;
+}
+
+export function getAuthenticatedUser(): LoginUser | null {
+  return currentUser;
+}
+
+export function resetSession(): void {
+  clearSession();
+}
+
+export async function login(credentials: LoginRequest): Promise<AuthSession> {
+  const response = await loginRequest(credentials);
+
+  setSession({
+    accessToken: response.accessToken,
+    refreshToken: response.refreshToken,
+    user: response.user,
+  });
+
+  return readSession() as AuthSession;
+}
+
+export async function restoreSession(): Promise<AuthSession | null> {
+  const session = readSession();
+
+  if (!session) {
+    return null;
+  }
+
+  try {
+    if (await verifyCurrentSession()) {
+      return session;
+    }
+  } catch (error) {
+    clearSession();
+
+    if (error instanceof ApiError && error.status === 401) {
+      return null;
+    }
+
+    throw error;
+  }
+
+  if (!refreshToken) {
+    clearSession();
+    return null;
+  }
+
+  try {
+    const rotated = await refreshRequest({
+      refreshToken,
+    });
+
+    setSession({
+      accessToken: rotated.accessToken,
+      refreshToken: rotated.refreshToken,
+    });
+
+    if (await verifyCurrentSession()) {
+      return readSession();
+    }
+
+    clearSession();
     return null;
   } catch (error) {
+    clearSession();
+
     if (error instanceof ApiError && error.status === 401) {
       return null;
     }
@@ -67,29 +145,48 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   }
 }
 
-export async function refresh(): Promise<RefreshResponse> {
+export async function refresh(): Promise<AuthSession | null> {
   if (inFlightRefresh) {
     return inFlightRefresh;
   }
 
-  const promise = apiRequest<RefreshResponse>(AUTH_ENDPOINTS.refresh, {
-    method: "POST",
-    body: {
-      refreshToken: refreshToken ?? "",
-    },
-  });
+  const session = readSession();
 
-  inFlightRefresh = promise;
+  if (!session) {
+    return null;
+  }
+
+  const refreshPromise = (async () => {
+    try {
+      const rotated = await refreshRequest({
+        refreshToken: session.refreshToken,
+      });
+
+      setSession({
+        accessToken: rotated.accessToken,
+        refreshToken: rotated.refreshToken,
+      });
+
+      await meRequest({
+        Authorization: `Bearer ${rotated.accessToken}`,
+      });
+
+      return readSession();
+    } catch (error) {
+      clearSession();
+
+      if (error instanceof ApiError && error.status === 401) {
+        return null;
+      }
+
+      throw error;
+    }
+  })();
+
+  inFlightRefresh = refreshPromise;
 
   try {
-    const response = await promise;
-
-    if (typeof window !== "undefined") {
-      accessToken = response.accessToken;
-      refreshToken = response.refreshToken;
-    }
-
-    return response;
+    return await refreshPromise;
   } finally {
     inFlightRefresh = null;
   }
@@ -98,24 +195,18 @@ export async function refresh(): Promise<RefreshResponse> {
 export async function logout(): Promise<void> {
   const currentRefreshToken = refreshToken;
 
-  if (typeof window !== "undefined") {
-    accessToken = null;
-    refreshToken = null;
-  }
+  clearSession();
 
   if (!currentRefreshToken) {
     return;
   }
 
   try {
-    await apiRequest<{ message: string; revoked: boolean }>(AUTH_ENDPOINTS.logout, {
-      method: "POST",
-      body: {
-        refreshToken: currentRefreshToken,
-      },
+    await logoutRequest({
+      refreshToken: currentRefreshToken,
     });
   } catch (error) {
-    if (error instanceof ApiError && error.status === 400) {
+    if (error instanceof ApiError && (error.status === 400 || error.status === 401)) {
       return;
     }
 
