@@ -9,6 +9,16 @@ const summaryConfig = [
 ] as const;
 
 export function ProjectSummaryCards({ summary }: { summary: DashboardSummary }) {
+  if (summary.state === "unavailable") {
+    return (
+      <Card className="border-dashed p-5 sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Overview unavailable</p>
+        <h2 className="mt-2 text-lg font-semibold text-foreground">Project summary is not supported yet</h2>
+        <p className="mt-2 text-sm leading-6 text-muted">{summary.message}</p>
+      </Card>
+    );
+  }
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {summaryConfig.map(({ key, label, tone }) => (

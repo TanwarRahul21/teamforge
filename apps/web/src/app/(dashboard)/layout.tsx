@@ -1,10 +1,7 @@
 import type { ReactNode } from "react";
 
-import { DashboardLayoutGate } from "@/components/auth/dashboard-layout-gate";
-import { getDashboardData } from "@/lib/mock/dashboard";
+import { DashboardDataProvider } from "@/components/dashboard/dashboard-data-provider";
 
-export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const data = await getDashboardData();
-
-  return <DashboardLayoutGate data={data}>{children}</DashboardLayoutGate>;
+export default function DashboardLayout({ children }: { children: ReactNode }) {
+  return <DashboardDataProvider>{children}</DashboardDataProvider>;
 }

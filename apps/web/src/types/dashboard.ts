@@ -2,6 +2,8 @@ export type Organization = {
   id: string;
   name: string;
   slug: string;
+  state: "available" | "unavailable";
+  message?: string;
 };
 
 export type CurrentUser = {
@@ -15,7 +17,13 @@ export type CurrentUser = {
 
 export type ProjectHealth = "On track" | "At risk" | "Blocked";
 
-export type Project = {
+export type UnavailableNotice = {
+  kind: "unavailable";
+  title: string;
+  message: string;
+};
+
+export type AvailableProject = {
   id: string;
   name: string;
   key: string;
@@ -27,7 +35,11 @@ export type Project = {
   dueDate: string;
 };
 
+export type Project = AvailableProject | UnavailableNotice;
+
 export type TaskStatusCounts = {
+  state: "available" | "unavailable";
+  message?: string;
   backlog: number;
   inProgress: number;
   review: number;
@@ -44,9 +56,11 @@ export type ActivityItem = {
   target: string;
   time: string;
   kind: ActivityKind;
-};
+} | UnavailableNotice;
 
 export type DashboardSummary = {
+  state: "available" | "unavailable";
+  message?: string;
   activeProjects: number;
   atRisk: number;
   openTasks: number;

@@ -94,7 +94,7 @@ export function AppShell({ data, children }: { data: DashboardData; children: Re
       </a>
 
       <div className="mx-auto flex min-h-dvh max-w-[1800px]">
-        <aside className="hidden border-r border-border bg-surface lg:block lg:w-[240px] lg:shrink-0">
+        <aside className="hidden border-r border-border bg-surface lg:block lg:w-60 lg:shrink-0">
           <div className="sticky top-0 flex h-screen flex-col overflow-hidden">
             <div className="flex items-center gap-3 border-b border-border px-5 py-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-sm font-semibold text-white">
@@ -126,15 +126,21 @@ export function AppShell({ data, children }: { data: DashboardData; children: Re
               <div className="flex flex-1 items-center justify-between gap-3">
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface-alt px-2.5 py-2 text-left text-sm font-medium text-foreground shadow-sm lg:min-w-[180px]"
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface-alt px-2.5 py-2 text-left text-sm font-medium text-foreground shadow-sm lg:min-w-45"
+                  title={data.organization.message}
                 >
-                  <span className="truncate">{data.organization.name}</span>
+                    <span className="truncate">{data.organization.name}</span>
+                    {data.organization.state === "unavailable" ? (
+                      <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+                        Unavailable
+                      </span>
+                    ) : null}
                 </button>
 
                 <div className="hidden items-center gap-3 md:flex md:flex-1 md:justify-end">
                   <button
                     type="button"
-                    className="inline-flex w-full max-w-[420px] items-center justify-between gap-3 rounded-lg border border-border bg-surface-alt px-3 py-2.5 text-left text-sm text-muted shadow-sm"
+                    className="inline-flex w-full max-w-105 items-center justify-between gap-3 rounded-lg border border-border bg-surface-alt px-3 py-2.5 text-left text-sm text-muted shadow-sm"
                     aria-label="Search"
                   >
                     <span className="inline-flex items-center gap-2">
@@ -160,9 +166,9 @@ export function AppShell({ data, children }: { data: DashboardData; children: Re
                   >
                     <Avatar initials={initials} size="sm" className="border-none" />
                     <div className="hidden min-w-0 flex-col items-start lg:flex">
-                      <span className="max-w-[180px] truncate text-sm font-medium text-foreground">{accountName}</span>
+                      <span className="max-w-45 truncate text-sm font-medium text-foreground">{accountName}</span>
                       {accountEmail ? (
-                        <span className="max-w-[180px] truncate text-xs text-muted">{accountEmail}</span>
+                        <span className="max-w-45 truncate text-xs text-muted">{accountEmail}</span>
                       ) : null}
                     </div>
                   </div>
@@ -215,7 +221,7 @@ export function AppShell({ data, children }: { data: DashboardData; children: Re
       <aside
         ref={drawerRef}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-[280px] border-r border-border bg-surface shadow-lg transition-transform duration-200 ease-out lg:hidden",
+          "fixed inset-y-0 left-0 z-50 w-70 border-r border-border bg-surface shadow-lg transition-transform duration-200 ease-out lg:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
         aria-label="Mobile navigation"

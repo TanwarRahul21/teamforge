@@ -13,6 +13,15 @@ const tasks = [
 ] as const;
 
 export function TaskStats({ taskStatus }: TaskStatsProps) {
+  if (taskStatus.state === "unavailable") {
+    return (
+      <Card className="border-dashed p-5 sm:p-6">
+        <h2 className="text-sm font-semibold text-foreground">Task status</h2>
+        <p className="mt-3 text-sm leading-6 text-muted">{taskStatus.message}</p>
+      </Card>
+    );
+  }
+
   const entries = tasks.map((task) => ({
     ...task,
     value: taskStatus[task.key],
