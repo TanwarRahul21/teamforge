@@ -10,21 +10,22 @@ type BadgeProps = {
 
 export function Badge({ children, tone = "neutral", className }: BadgeProps) {
   const toneClasses = {
-    neutral: "bg-surface text-muted border-border",
-    accent: "bg-accent-soft text-accent border-accent/20",
-    "on-track": "bg-done/80 text-emerald-700 border-emerald-200",
-    "at-risk": "bg-review/80 text-amber-700 border-amber-200",
-    blocked: "bg-red-100 text-red-700 border-red-200",
+    neutral: "border-border bg-surface-alt text-muted",
+    accent: "border-accent/25 bg-accent-soft text-accent",
+    "on-track": "border-border bg-done text-done-text",
+    "at-risk": "border-border bg-risk text-risk-text",
+    blocked: "border-border bg-blocked text-blocked-text",
   };
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium leading-none",
+        "inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] font-medium leading-none",
         toneClasses[tone],
         className,
       )}
     >
+      <span className="inline-block h-1.5 w-1.5 rounded-full bg-current opacity-80" aria-hidden="true" />
       {children}
     </span>
   );

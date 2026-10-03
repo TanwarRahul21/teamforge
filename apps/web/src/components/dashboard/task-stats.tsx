@@ -40,13 +40,18 @@ export function TaskStats({ taskStatus }: TaskStatsProps) {
           const percentage = Math.round((entry.value / total) * 100);
 
           return (
-            <div key={entry.key} className="space-y-1.5">
+            <div key={entry.key} className="space-y-2">
               <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="font-medium text-foreground">{entry.label}</span>
-                <span className="tabular-nums text-muted">{entry.value} ({percentage}%)</span>
+                <span className="tabular-nums text-muted">
+                  {entry.value} <span className="text-subtle">({percentage}%)</span>
+                </span>
               </div>
-              <div className="h-2.5 w-full overflow-hidden rounded-full bg-surface">
-                <div className={`${entry.color} h-full rounded-full`} style={{ width: `${percentage}%` }} />
+              <div className="h-2 overflow-hidden rounded-full bg-surface-alt">
+                <div
+                  className={`${entry.color} h-full rounded-full`}
+                  style={{ width: `${percentage}%` }}
+                />
               </div>
             </div>
           );

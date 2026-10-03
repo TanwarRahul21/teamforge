@@ -28,14 +28,14 @@ export function RecentActivity({ activities }: { activities: ActivityItem[] }) {
     <Card className="p-4 sm:p-5">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="text-sm font-semibold text-foreground">Recent activity</h2>
-        <span className="text-xs text-muted">Updated 1h ago</span>
+        <span className="text-[11px] text-muted">Updated 1h ago</span>
       </div>
 
       <ul className="space-y-3">
         {activities.map((activity) => {
           if ("kind" in activity && activity.kind === "unavailable") {
             return (
-              <li key={activity.title} className="rounded-lg border border-dashed border-border bg-surface-alt p-4">
+              <li key={activity.title} className="rounded-md border border-dashed border-border bg-surface-alt p-3">
                 <p className="text-sm font-semibold text-foreground">{activity.title}</p>
                 <p className="mt-2 text-sm leading-6 text-muted">{activity.message}</p>
               </li>
@@ -44,13 +44,15 @@ export function RecentActivity({ activities }: { activities: ActivityItem[] }) {
 
           return (
             <li key={activity.id} className="flex gap-3 border-b border-border pb-3 last:border-0 last:pb-0">
-              <Avatar initials={activity.initials} size="sm" className="mt-0.5" />
+              <Avatar initials={activity.initials} size="sm" className="mt-0.5 border-none" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm text-foreground">
-                  <span className="font-medium">{activity.user}</span> {activity.action}
-                  <span className="font-medium text-foreground"> {activity.target}</span>
+                <p className="text-sm leading-5 text-foreground">
+                  <span className="font-medium">{activity.user}</span> {activity.action}{" "}
+                  <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
+                    {activity.target}
+                  </span>
                 </p>
-                <time dateTime={activity.time} className="mt-1 block text-xs text-muted">
+                <time dateTime={activity.time} className="mt-1 block text-[11px] text-muted">
                   {formatRelativeTime(activity.time, "en-US", "UTC")}
                 </time>
               </div>

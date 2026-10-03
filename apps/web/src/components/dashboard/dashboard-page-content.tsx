@@ -14,12 +14,12 @@ export function DashboardPageContent() {
     <div className="mx-auto max-w-7xl">
       <PageHeader
         title={`Welcome back, ${data.user.firstName}`}
-        subtitle="Here’s a snapshot of delivery health, team momentum, and work moving through the pipeline."
+        subtitle="A compact snapshot of delivery health, team momentum, and work progressing through the pipeline."
       />
 
       <ProjectSummaryCards summary={data.summary} />
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1.7fr_0.9fr]">
+      <div className="mt-6 grid gap-6 xl:grid-cols-[1.65fr_0.95fr]">
         <div className="space-y-6">
           <TaskStats taskStatus={data.taskStatus} />
           <ActiveProjects projects={data.projects} />

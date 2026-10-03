@@ -12,7 +12,7 @@ export function ProjectSummaryCards({ summary }: { summary: DashboardSummary }) 
   if (summary.state === "unavailable") {
     return (
       <Card className="border-dashed p-5 sm:p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Overview unavailable</p>
+        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">Overview unavailable</p>
         <h2 className="mt-2 text-lg font-semibold text-foreground">Project summary is not supported yet</h2>
         <p className="mt-2 text-sm leading-6 text-muted">{summary.message}</p>
       </Card>
@@ -21,25 +21,12 @@ export function ProjectSummaryCards({ summary }: { summary: DashboardSummary }) 
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {summaryConfig.map(({ key, label, tone }) => (
+      {summaryConfig.map(({ key, label }) => (
         <Card key={key} className="p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted">{label}</p>
-              <p className="mt-3 text-2xl font-semibold tabular-nums text-foreground">{summary[key]}</p>
-            </div>
-            <span
-              className={[
-                "inline-flex h-8 w-8 items-center justify-center rounded-md text-xs font-semibold",
-                tone === "accent" && "bg-accent-soft text-accent",
-                tone === "warning" && "bg-review/90 text-amber-700",
-                tone === "neutral" && "bg-surface text-foreground",
-                tone === "success" && "bg-done/80 text-emerald-700",
-              ].join(" ")}
-            >
-              {key === "activeProjects" ? "14" : key === "atRisk" ? "3" : key === "openTasks" ? "126" : "18"}
-            </span>
-          </div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">{label}</p>
+          <p className="mt-3 text-2xl font-semibold tabular-nums tracking-[-0.04em] text-foreground">
+            {summary[key]}
+          </p>
           <p className="mt-3 text-xs text-muted">
             {key === "activeProjects" && "Across engineering and product squads"}
             {key === "atRisk" && "Health checks need attention"}

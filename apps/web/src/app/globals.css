@@ -1,26 +1,147 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f7f5;
+  --surface: #ffffff;
+  --surface-alt: #f4f4f1;
+  --foreground: #1a1a1a;
+  --muted: #5f5f5a;
+  --subtle: #8a8a84;
+  --border: #e4e4e0;
+  --border-strong: #cfcfc9;
+  --accent: #3a6079;
+  --accent-soft: #e8eef4;
+  --backlog-bg: #f1f1ef;
+  --backlog-text: #4a4a45;
+  --in-progress-bg: #e7eef7;
+  --in-progress-text: #33597f;
+  --review-bg: #f1ebdf;
+  --review-text: #785c2a;
+  --done-bg: #e6f1e9;
+  --done-text: #2f6648;
+  --risk-bg: #f3e6d8;
+  --risk-text: #8a4a2c;
+  --blocked-bg: #f0e1df;
+  --blocked-text: #7a3e39;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-backlog: var(--backlog-bg);
+  --color-backlog-text: var(--backlog-text);
+  --color-in-progress: var(--in-progress-bg);
+  --color-in-progress-text: var(--in-progress-text);
+  --color-review: var(--review-bg);
+  --color-review-text: var(--review-text);
+  --color-done: var(--done-bg);
+  --color-done-text: var(--done-text);
+  --color-risk: var(--risk-bg);
+  --color-risk-text: var(--risk-text);
+  --color-blocked: var(--blocked-bg);
+  --color-blocked-text: var(--blocked-text);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #101111;
+    --surface: #171918;
+    --surface-alt: #1d1f1d;
+    --foreground: #edf0ee;
+    --muted: #afb5b0;
+    --subtle: #7d867f;
+    --border: #2a2e2b;
+    --border-strong: #3a413d;
+    --accent: #a7c0d9;
+    --accent-soft: #1d2a35;
+    --backlog-bg: #202422;
+    --backlog-text: #dce4df;
+    --in-progress-bg: #1b2e41;
+    --in-progress-text: #cfe3ff;
+    --review-bg: #312a21;
+    --review-text: #f0d29b;
+    --done-bg: #1f3127;
+    --done-text: #cfead8;
+    --risk-bg: #35261c;
+    --risk-text: #f2c69b;
+    --blocked-bg: #2d2121;
+    --blocked-text: #efb0ab;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    background: var(--background);
+    color: var(--foreground);
+  }
+
+  body {
+    min-height: 100vh;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+    text-rendering: optimizeLegibility;
+  }
+
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease,
+      opacity 120ms ease;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: rgba(58, 96, 121, 0.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

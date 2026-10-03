@@ -53,38 +53,40 @@ export function ActiveProjects({ projects }: { projects: Project[] }) {
           const project = projectItem as AvailableProject;
 
           return (
-          <div key={project.id} className="rounded-lg border border-border bg-surface-alt p-3 sm:p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="truncate text-sm font-semibold text-foreground">{project.name}</h3>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted">{project.key}</span>
+            <div key={project.id} className="rounded-md border border-border bg-surface-alt p-3 sm:p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="truncate text-sm font-semibold text-foreground">{project.name}</h3>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-muted">
+                      {project.key}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Badge tone={healthToneMap[project.health]}>{project.health}</Badge>
+                    <span className="text-xs text-muted">{project.openTasks} open tasks</span>
+                  </div>
                 </div>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <Badge tone={healthToneMap[project.health]}>{project.health}</Badge>
-                  <span className="text-xs text-muted">{project.openTasks} open tasks</span>
+                <div className="flex items-center gap-2 self-start">
+                  {project.members.map((member: string) => (
+                    <Avatar key={member} initials={member} size="sm" className="border-none" />
+                  ))}
                 </div>
               </div>
-              <div className="flex items-center gap-2 self-start">
-                {project.members.map((member: string) => (
-                  <Avatar key={member} initials={member} size="sm" className="border-none" />
-                ))}
+
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center justify-between gap-3 text-xs text-muted">
+                  <span>{project.lead}</span>
+                  <span>{project.progress}%</span>
+                </div>
+                <ProgressBar value={project.progress} />
+              </div>
+
+              <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted">
+                <span>Due {formatShortDate(project.dueDate, "en-US", "UTC")}</span>
+                <span className="font-medium text-foreground">Lead: {project.lead}</span>
               </div>
             </div>
-
-            <div className="mt-4 space-y-2">
-              <div className="flex items-center justify-between gap-3 text-xs text-muted">
-                <span>{project.lead}</span>
-                <span>{project.progress}%</span>
-              </div>
-              <ProgressBar value={project.progress} />
-            </div>
-
-            <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted">
-              <span>Due {formatShortDate(project.dueDate, "en-US", "UTC")}</span>
-              <span className="font-medium text-foreground">Lead: {project.lead}</span>
-            </div>
-          </div>
           );
         })}
       </div>

@@ -29,8 +29,10 @@ export function SidebarNav({ compact = false }: { compact?: boolean }) {
             href={item.href}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-              isActive ? "bg-surface text-foreground" : "text-muted hover:bg-surface hover:text-foreground",
+              "group flex items-center gap-3 rounded-md border px-3 py-2.5 text-sm font-medium transition-colors",
+              isActive
+                ? "border-border bg-surface-alt text-foreground"
+                : "border-transparent text-muted hover:border-border hover:bg-surface hover:text-foreground",
               compact && "justify-center px-2.5",
             )}
           >

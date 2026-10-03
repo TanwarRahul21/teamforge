@@ -85,7 +85,7 @@ export function AppShell({ data, children }: { data: DashboardData; children: Re
   };
 
   return (
-    <div className="min-h-dvh bg-surface text-foreground">
+    <div className="min-h-dvh bg-background text-foreground">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-foreground focus:px-4 focus:py-2 focus:text-background"
@@ -94,9 +94,9 @@ export function AppShell({ data, children }: { data: DashboardData; children: Re
       </a>
 
       <div className="mx-auto flex min-h-dvh max-w-[1800px]">
-        <aside className="hidden border-r border-border bg-surface lg:block lg:w-60 lg:shrink-0">
+        <aside className="hidden border-r border-border bg-surface lg:block lg:w-64 lg:shrink-0">
           <div className="sticky top-0 flex h-screen flex-col overflow-hidden">
-            <div className="flex items-center gap-3 border-b border-border px-5 py-4">
+            <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent text-sm font-semibold text-white">
                 TF
               </div>
@@ -111,64 +111,66 @@ export function AppShell({ data, children }: { data: DashboardData; children: Re
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 border-b border-border bg-surface/90 backdrop-blur-sm">
-            <div className="flex h-16 items-center gap-3 px-3 sm:px-4 lg:px-6">
+          <header className="sticky top-0 z-30 border-b border-border bg-background/95">
+            <div className="flex h-14 items-center gap-3 px-3 sm:px-4 lg:px-6">
               <button
                 ref={triggerRef}
                 type="button"
                 onClick={() => setMobileOpen((value) => !value)}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border text-muted transition-colors hover:bg-surface-alt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 lg:hidden"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border bg-surface text-muted hover:bg-surface-alt lg:hidden"
                 aria-label="Open navigation menu"
               >
-                <IconMenu className="h-5 w-5" />
+                <IconMenu className="h-4 w-4" />
               </button>
 
               <div className="flex flex-1 items-center justify-between gap-3">
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface-alt px-2.5 py-2 text-left text-sm font-medium text-foreground shadow-sm lg:min-w-45"
+                  className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-2.5 py-2 text-left text-sm font-medium text-foreground lg:min-w-44"
                   title={data.organization.message}
                 >
-                    <span className="truncate">{data.organization.name}</span>
-                    {data.organization.state === "unavailable" ? (
-                      <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
-                        Unavailable
-                      </span>
-                    ) : null}
+                  <span className="truncate">{data.organization.name}</span>
+                  {data.organization.state === "unavailable" ? (
+                    <span className="rounded-full border border-border bg-surface-alt px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+                      Unavailable
+                    </span>
+                  ) : null}
                 </button>
 
                 <div className="hidden items-center gap-3 md:flex md:flex-1 md:justify-end">
                   <button
                     type="button"
-                    className="inline-flex w-full max-w-105 items-center justify-between gap-3 rounded-lg border border-border bg-surface-alt px-3 py-2.5 text-left text-sm text-muted shadow-sm"
+                    className="inline-flex w-full max-w-80 items-center justify-between gap-3 rounded-md border border-border bg-surface px-3 py-2 text-left text-sm text-muted"
                     aria-label="Search"
                   >
                     <span className="inline-flex items-center gap-2">
                       <IconSearch className="h-4 w-4" />
                       <span>Search</span>
                     </span>
-                    <span className="rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-subtle">⌘K</span>
+                    <span className="rounded border border-border bg-surface-alt px-1.5 py-0.5 text-[10px] font-medium text-subtle">
+                      ⌘K
+                    </span>
                   </button>
 
                   <button
                     type="button"
-                    className="relative inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-surface-alt text-muted transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                    className="relative inline-flex h-10 w-10 items-center justify-center rounded-md border border-border bg-surface text-muted hover:bg-surface-alt"
                     aria-label="Notifications. 3 unread."
                   >
                     <IconBell className="h-4 w-4" />
-                    <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-accent" aria-hidden="true" />
+                    <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent" aria-hidden="true" />
                   </button>
 
                   <div
-                    className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface-alt px-2 py-1.5"
+                    className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-2 py-1.5"
                     aria-label={user ? `${accountName} account details` : "Account details"}
                     title={accountEmail}
                   >
                     <Avatar initials={initials} size="sm" className="border-none" />
                     <div className="hidden min-w-0 flex-col items-start lg:flex">
-                      <span className="max-w-45 truncate text-sm font-medium text-foreground">{accountName}</span>
+                      <span className="max-w-40 truncate text-sm font-medium text-foreground">{accountName}</span>
                       {accountEmail ? (
-                        <span className="max-w-45 truncate text-xs text-muted">{accountEmail}</span>
+                        <span className="max-w-40 truncate text-[11px] text-muted">{accountEmail}</span>
                       ) : null}
                     </div>
                   </div>
@@ -176,7 +178,7 @@ export function AppShell({ data, children }: { data: DashboardData; children: Re
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-surface-alt px-3 text-sm font-medium text-muted transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                    className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-surface px-3 text-sm font-medium text-muted hover:bg-surface-alt"
                   >
                     Sign out
                   </button>
@@ -185,18 +187,18 @@ export function AppShell({ data, children }: { data: DashboardData; children: Re
                 <div className="flex items-center gap-2 md:hidden">
                   <button
                     type="button"
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-surface-alt text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border bg-surface text-muted"
                     aria-label="Search"
                   >
                     <IconSearch className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
-                    className="relative inline-flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-surface-alt text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                    className="relative inline-flex h-10 w-10 items-center justify-center rounded-md border border-border bg-surface text-muted"
                     aria-label="Notifications. 3 unread."
                   >
                     <IconBell className="h-4 w-4" />
-                    <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-accent" aria-hidden="true" />
+                    <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent" aria-hidden="true" />
                   </button>
                 </div>
               </div>
@@ -211,7 +213,7 @@ export function AppShell({ data, children }: { data: DashboardData; children: Re
 
       <div
         className={cn(
-          "fixed inset-0 z-40 bg-black/25 transition-opacity duration-200 lg:hidden",
+          "fixed inset-0 z-40 bg-black/15 transition-opacity duration-150 lg:hidden",
           mobileOpen ? "opacity-100" : "pointer-events-none opacity-0",
         )}
         onClick={closeMobileMenu}
@@ -221,7 +223,7 @@ export function AppShell({ data, children }: { data: DashboardData; children: Re
       <aside
         ref={drawerRef}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-70 border-r border-border bg-surface shadow-lg transition-transform duration-200 ease-out lg:hidden",
+          "fixed inset-y-0 left-0 z-50 w-70 border-r border-border bg-surface transition-transform duration-150 ease-out lg:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
         aria-label="Mobile navigation"

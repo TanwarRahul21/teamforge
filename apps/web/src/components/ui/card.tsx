@@ -8,7 +8,7 @@ export function Card({
   ...props
 }: HTMLAttributes<HTMLDivElement> & { children: ReactNode }) {
   return (
-    <div className={cn("rounded-lg border border-border bg-surface-alt", className)} {...props}>
+    <div className={cn("rounded-lg border border-border bg-surface", className)} {...props}>
       {children}
     </div>
   );
